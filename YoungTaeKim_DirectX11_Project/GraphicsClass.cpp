@@ -4,6 +4,8 @@
 #include "modelclass.h"
 #include "colorshaderclass.h"
 #include "graphicsclass.h"
+//#include "textureclass.h"
+#include "textureshaderclass.h"
 
 
 GraphicsClass::GraphicsClass()
@@ -55,13 +57,14 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// m_Model 객체 초기화
-	if (!m_Model->Initialize(m_Direct3D->GetDevice()))
+	if (!m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), "../YoungTaeKim_DirectX11_Project/data/stone01.tga"))
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
 
 	// m_ColorShader 객체 생성
+	/*
 	m_ColorShader = new ColorShaderClass;
 	if (!m_ColorShader)
 	{
@@ -74,6 +77,17 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the color shader object.", L"Error", MB_OK);
 		return false;
 	}
+	*/
+
+	// Create&Initialize m_Texture object
+	m_TextureShader = new TextureShaderClass;
+	if (!m_TextureShader) {
+		return false;
+	}
+	if (!m_TextureShader->Initialize(m_Direct3D->GetDevice(), hwnd)) {
+		MessageBox(hwnd, L"Could not initialize the texture shader object!!", L"Error!!", MB_OK);
+		return false;
+	}
 
 	return true;
 }
@@ -81,12 +95,20 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 void GraphicsClass::Shutdown()
 {
-	// m_ColorShader 객체 반환
+	/*// m_ColorShader 객체 반환
 	if (m_ColorShader)
 	{
 		m_ColorShader->Shutdown();
 		delete m_ColorShader;
 		m_ColorShader = 0;
+	}
+	*/
+	
+	// Release m_TextureShader object
+	if (m_TextureShader) {
+		m_TextureShader->Shutdown();
+		delete m_TextureShader;
+		m_TextureShader = 0;
 	}
 
 	// m_Model 객체 반환
@@ -143,9 +165,15 @@ bool GraphicsClass::Render()
 	// 모델 버텍스와 인덱스 버퍼를 그래픽 파이프 라인에 배치하여 드로잉을 준비합니다.
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
-	// 색상 쉐이더를 사용하여 모델을 렌더링합니다.
+	/*// 색상 쉐이더를 사용하여 모델을 렌더링합니다.
 	if (!m_ColorShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix))
 	{
+		return false;
+	}
+	*/
+
+	// Render Model using TextureShader
+	if (!m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture())) {
 		return false;
 	}
 

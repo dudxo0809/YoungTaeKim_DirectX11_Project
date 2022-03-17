@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "modelclass.h"
+#include "TextureClass.h"
 
 
 ModelClass::ModelClass()
@@ -17,10 +18,13 @@ ModelClass::~ModelClass()
 }
 
 
-bool ModelClass::Initialize(ID3D11Device* device)
+bool ModelClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* textureFilename)
 {
 	// 정점 및 인덱스 버퍼를 초기화합니다.
-	return InitializeBuffers(device);
+	if (!InitializeBuffers(device)) {
+		return false;
+	}
+	return LoadTexture(device, deviceContext, textureFilename);
 }
 
 
@@ -43,14 +47,19 @@ int ModelClass::GetIndexCount()
 	return m_indexCount;
 }
 
+ID3D11ShaderResourceView* ModelClass::GetTexture()
+{
+	return m_Texture->GetTexture();
+}
+
 
 bool ModelClass::InitializeBuffers(ID3D11Device* device)
 {	
 	// 정점 배열의 정점 수를 설정합니다.
-	m_vertexCount = 4;
+	m_vertexCount = 3;
 
 	// 인덱스 배열의 인덱스 수를 설정합니다.
-	m_indexCount = 6;
+	m_indexCount = 3;
 
 	// 정점 배열을 만듭니다.
 	VertexType* vertices = new VertexType[m_vertexCount];
@@ -68,25 +77,21 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 
 	// 정점 배열에 데이터를 설정합니다.
 	vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
-	vertices[0].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+	vertices[0].texture = XMFLOAT2(0.0f, 1.0f);
 
-	vertices[1].position = XMFLOAT3(-1.0f, 1.0f, 0.0f);  // Top left.
-	vertices[1].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+	vertices[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // Top left.
+	vertices[1].texture = XMFLOAT2(0.5f, 0.0f);
 
-	vertices[2].position = XMFLOAT3(1.0f, 1.0f, 0.0f);  // Top right.
-	vertices[2].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+	vertices[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Top right.
+	vertices[2].texture = XMFLOAT2(1.0f, 1.0f);
 
-	vertices[3].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
-	vertices[3].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+
 
 	// 인덱스 배열의 값을 설정합니다.
 	indices[0] = 0;  // Bottom left.
 	indices[1] = 1;  // Top middle.
 	indices[2] = 2;  // Bottom right.
-	indices[3] = 2;  // Bottom right.
-	indices[4] = 3;  // Bottom right.
-	indices[5] = 0;  // Bottom right.
-
+	
 	// 정적 정점 버퍼의 구조체를 설정합니다.
 	D3D11_BUFFER_DESC vertexBufferDesc;
     vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -172,4 +177,23 @@ void ModelClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 
     // 정점 버퍼로 그릴 기본형을 설정합니다. 여기서는 삼각형으로 설정합니다.
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+bool ModelClass::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* textureFilename)
+{
+	m_Texture = new TextureClass;
+	if (!m_Texture) {
+		return false;
+	}
+	return m_Texture->Initialize(device, deviceContext, textureFilename);
+}
+
+void ModelClass::ReleaseTexture()
+{
+	if (m_Texture) {
+		m_Texture->Shutdown();
+		delete m_Texture;
+		m_Texture = 0;
+	}
+
 }
