@@ -12,8 +12,8 @@ const float SCREEN_NEAR = 0.1f;
 class D3DClass;
 class CameraClass;
 class ModelClass;
-class ColorShaderClass;
-class TextureShaderClass;
+class LightClass;
+class LightShaderClass;
 
 
 class GraphicsClass
@@ -28,15 +28,17 @@ public:
 	bool Frame();
 
 	void MoveCamera(unsigned int key);
+	void Rotate(const unsigned int key);
 
 private:
-	bool Render();
+	bool Render(float rotation);
 
 private:
 	D3DClass* m_Direct3D = nullptr;
 	CameraClass* m_Camera = nullptr;
 	ModelClass* m_Model = nullptr;
-	//ColorShaderClass* m_ColorShader = nullptr;
-	//TextureClass* m_Texture = nullptr;
-	TextureShaderClass* m_TextureShader = nullptr;
+	LightClass* m_Light = nullptr;
+	LightShaderClass* m_LightShader = nullptr;
+
+	float rotation;
 };

@@ -18,18 +18,21 @@ ModelClass::~ModelClass()
 }
 
 
-bool ModelClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* textureFilename)
+bool ModelClass::Initialize(ID3D11Device* device, WCHAR* textureFilename)
 {
 	// 정점 및 인덱스 버퍼를 초기화합니다.
 	if (!InitializeBuffers(device)) {
 		return false;
 	}
-	return LoadTexture(device, deviceContext, textureFilename);
+	return LoadTexture(device, textureFilename);
 }
 
 
 void ModelClass::Shutdown()
 {
+	// Release Model Texture
+	ReleaseTexture();
+
 	// 버텍스 및 인덱스 버퍼를 종료합니다.
 	ShutdownBuffers();
 }
@@ -179,13 +182,13 @@ void ModelClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
-bool ModelClass::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* textureFilename)
+bool ModelClass::LoadTexture(ID3D11Device* device, WCHAR* textureFilename)
 {
 	m_Texture = new TextureClass;
 	if (!m_Texture) {
 		return false;
 	}
-	return m_Texture->Initialize(device, deviceContext, textureFilename);
+	return m_Texture->Initialize(device, textureFilename);
 }
 
 void ModelClass::ReleaseTexture()
@@ -195,5 +198,12 @@ void ModelClass::ReleaseTexture()
 		delete m_Texture;
 		m_Texture = 0;
 	}
+
+}
+
+void ModelClass::Rotate(float rotate)
+{
+
+
 
 }

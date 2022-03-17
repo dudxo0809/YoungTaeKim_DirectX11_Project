@@ -120,11 +120,11 @@ bool SystemClass::Frame()
 		}
 		if (m_Input->IsKeyDown(VK_RIGHT)) {
 			// Move right
-			m_Graphics->MoveCamera(VK_RIGHT);
+			m_Graphics->Rotate(VK_RIGHT);
 		}
 		if (m_Input->IsKeyDown(VK_LEFT)) {
 			// Move left
-			m_Graphics->MoveCamera(VK_LEFT);
+			m_Graphics->Rotate(VK_LEFT);
 		}
 
 	}

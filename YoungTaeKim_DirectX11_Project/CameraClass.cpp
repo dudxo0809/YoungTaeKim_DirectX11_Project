@@ -167,7 +167,7 @@ void CameraClass::CameraMove(const unsigned int key)
 
 		break;
 	}
-
+	/*
 	case VK_RIGHT:
 	{
 		cameraPosition.x += cameraRightDirection.x * 0.02f;
@@ -191,6 +191,7 @@ void CameraClass::CameraMove(const unsigned int key)
 
 		break;
 	}
+	*/
 
 	}
 

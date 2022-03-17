@@ -2,14 +2,14 @@
 #include "d3dclass.h"
 #include "cameraclass.h"
 #include "modelclass.h"
-#include "colorshaderclass.h"
+#include "LightClass.h"
+#include "LightShaderClass.h"
 #include "graphicsclass.h"
-//#include "textureclass.h"
-#include "textureshaderclass.h"
 
 
 GraphicsClass::GraphicsClass()
 {
+	rotation = 0.0f;
 }
 
 
@@ -57,37 +57,30 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// m_Model 객체 초기화
-	if (!m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), "../YoungTaeKim_DirectX11_Project/data/stone01.tga"))
+	WCHAR filepath[] = L"../YoungTaeKim_DirectX11_Project/data/seafloor.dds";
+	if (!m_Model->Initialize(m_Direct3D->GetDevice(), filepath))
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
 	}
 
-	// m_ColorShader 객체 생성
-	/*
-	m_ColorShader = new ColorShaderClass;
-	if (!m_ColorShader)
-	{
+	// Create & Initialize m_LightShader Object
+	m_LightShader = new LightShaderClass;
+	if (!m_LightShader) {
+		return false;
+	}
+	if (!m_LightShader->Initialize(m_Direct3D->GetDevice(), hwnd)) {
+		MessageBox(hwnd, L"Could not initialize the light shader object.", L"Error!", MB_OK);
 		return false;
 	}
 
-	// m_ColorShader 객체 초기화
-	if (!m_ColorShader->Initialize(m_Direct3D->GetDevice(), hwnd))
-	{
-		MessageBox(hwnd, L"Could not initialize the color shader object.", L"Error", MB_OK);
+	// Create & Initialize m_Light Object
+	m_Light = new LightClass;
+	if (!m_Light) {
 		return false;
 	}
-	*/
-
-	// Create&Initialize m_Texture object
-	m_TextureShader = new TextureShaderClass;
-	if (!m_TextureShader) {
-		return false;
-	}
-	if (!m_TextureShader->Initialize(m_Direct3D->GetDevice(), hwnd)) {
-		MessageBox(hwnd, L"Could not initialize the texture shader object!!", L"Error!!", MB_OK);
-		return false;
-	}
+	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
+	m_Light->SetDirection(0.0f, 0.0f, 1.0f);
 
 	return true;
 }
@@ -95,20 +88,14 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 void GraphicsClass::Shutdown()
 {
-	/*// m_ColorShader 객체 반환
-	if (m_ColorShader)
-	{
-		m_ColorShader->Shutdown();
-		delete m_ColorShader;
-		m_ColorShader = 0;
+	// Release m_Light & m_LightShader
+	if (m_Light) {
+		delete m_Light;
+		m_Light = 0;
 	}
-	*/
-	
-	// Release m_TextureShader object
-	if (m_TextureShader) {
-		m_TextureShader->Shutdown();
-		delete m_TextureShader;
-		m_TextureShader = 0;
+	if (m_LightShader) {
+		delete m_LightShader;
+		m_LightShader = 0;
 	}
 
 	// m_Model 객체 반환
@@ -138,8 +125,9 @@ void GraphicsClass::Shutdown()
 
 bool GraphicsClass::Frame()
 {
+
 	// 그래픽 랜더링 처리
-	return Render();
+	return Render(rotation);
 }
 
 void GraphicsClass::MoveCamera(unsigned int key)
@@ -147,9 +135,27 @@ void GraphicsClass::MoveCamera(unsigned int key)
 	m_Camera->CameraMove(key);
 }
 
-
-bool GraphicsClass::Render()
+void GraphicsClass::Rotate(const unsigned int key)
 {
+	switch (key) {
+	case VK_LEFT:
+	{
+		rotation -= 0.01f;
+		break;
+	}
+	case VK_RIGHT: {
+		rotation += 0.01f;
+		break;
+	}
+	}
+
+	
+};
+
+
+bool GraphicsClass::Render(float rotation)
+{
+
 	// 씬을 그리기 위해 버퍼를 지웁니다
 	m_Direct3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -162,18 +168,16 @@ bool GraphicsClass::Render()
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 
+	// 삼각형이 회전 할 수 있도록 회전 값으로 월드 행렬을 회전합니다.
+	worldMatrix = XMMatrixRotationY(rotation);
+
 	// 모델 버텍스와 인덱스 버퍼를 그래픽 파이프 라인에 배치하여 드로잉을 준비합니다.
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
-	/*// 색상 쉐이더를 사용하여 모델을 렌더링합니다.
-	if (!m_ColorShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix))
+	// Render model using Light shader
+	if (!m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(),
+		worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor())) 
 	{
-		return false;
-	}
-	*/
-
-	// Render Model using TextureShader
-	if (!m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture())) {
 		return false;
 	}
 
