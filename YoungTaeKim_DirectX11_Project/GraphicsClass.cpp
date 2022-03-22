@@ -138,15 +138,15 @@ void GraphicsClass::MoveCamera(unsigned int key)
 void GraphicsClass::Rotate(const unsigned int key)
 {
 	switch (key) {
-	case VK_LEFT:
-	{
-		rotation -= 0.01f;
-		break;
-	}
-	case VK_RIGHT: {
-		rotation += 0.01f;
-		break;
-	}
+		case VK_LEFT:
+		{
+			rotation -= 0.01f;
+			break;
+		}
+		case VK_RIGHT: {
+			rotation += 0.01f;
+			break;
+		}
 	}
 
 	
