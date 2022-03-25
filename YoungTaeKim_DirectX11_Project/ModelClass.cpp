@@ -2,6 +2,8 @@
 #include "modelclass.h"
 #include "TextureClass.h"
 
+#include <fstream>
+using namespace std;
 
 ModelClass::ModelClass()
 {
@@ -18,8 +20,13 @@ ModelClass::~ModelClass()
 }
 
 
-bool ModelClass::Initialize(ID3D11Device* device, WCHAR* textureFilename)
+bool ModelClass::Initialize(ID3D11Device* device, char* modelFilename, WCHAR* textureFilename)
 {
+	// Load Model data
+	if (!LoadModel(modelFilename)) {
+		return false;
+	}
+
 	// 정점 및 인덱스 버퍼를 초기화합니다.
 	if (!InitializeBuffers(device)) {
 		return false;
@@ -35,6 +42,9 @@ void ModelClass::Shutdown()
 
 	// 버텍스 및 인덱스 버퍼를 종료합니다.
 	ShutdownBuffers();
+
+	// Release Model data
+	ReleaseModel();
 }
 
 
@@ -58,43 +68,29 @@ ID3D11ShaderResourceView* ModelClass::GetTexture()
 
 bool ModelClass::InitializeBuffers(ID3D11Device* device)
 {	
-	// 정점 배열의 정점 수를 설정합니다.
-	m_vertexCount = 3;
-
-	// 인덱스 배열의 인덱스 수를 설정합니다.
-	m_indexCount = 3;
-
-	// 정점 배열을 만듭니다.
+	// Make vertex array
 	VertexType* vertices = new VertexType[m_vertexCount];
 	if(!vertices)
 	{
 		return false;
 	}
 
-	// 인덱스 배열을 만듭니다.
+	// Make index array
 	unsigned long* indices = new unsigned long[m_indexCount];
 	if(!indices)
 	{
 		return false;
 	}
 
-	// 정점 배열에 데이터를 설정합니다.
-	vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
-	vertices[0].texture = XMFLOAT2(0.0f, 1.0f);
+	// initialize vertex & index from model data
+	for (int i = 0; i < m_vertexCount; i++) {
+		vertices[i].position = XMFLOAT3(m_model[i].x, m_model[i].y, m_model[i].z);
+		vertices[i].texture = XMFLOAT2(m_model[i].tu, m_model[i].tv);
+		vertices[i].normal = XMFLOAT3(m_model[i].nx, m_model[i].ny, m_model[i].nz);
 
-	vertices[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // Top left.
-	vertices[1].texture = XMFLOAT2(0.5f, 0.0f);
+		indices[i] = i;
+	}
 
-	vertices[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Top right.
-	vertices[2].texture = XMFLOAT2(1.0f, 1.0f);
-
-
-
-	// 인덱스 배열의 값을 설정합니다.
-	indices[0] = 0;  // Bottom left.
-	indices[1] = 1;  // Top middle.
-	indices[2] = 2;  // Bottom right.
-	
 	// 정적 정점 버퍼의 구조체를 설정합니다.
 	D3D11_BUFFER_DESC vertexBufferDesc;
     vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -199,6 +195,66 @@ void ModelClass::ReleaseTexture()
 		m_Texture = 0;
 	}
 
+}
+
+
+bool ModelClass::LoadModel(char* modelFilename)
+{
+	// Open model file
+	ifstream fin;
+	fin.open(modelFilename);
+
+	if (fin.fail()) {
+		return false;
+	}
+
+	// Read to vertex count value
+	char input = 0;
+	fin.get(input);
+	while (input != ':') {
+		fin.get(input);
+	}
+
+	// Read vrtex count
+	fin >> m_vertexCount;
+
+	// Set indexcount to same with vertex count
+	m_indexCount = m_vertexCount;
+
+	// Make model reading model data file
+	m_model = new ModelType[m_vertexCount];
+	if (!m_model) {
+		return false;
+	}
+
+	fin.get(input);
+	while (input != ':') {
+		fin.get(input);
+	}
+	fin.get(input);
+	fin.get(input);
+
+	// Read vertex data
+	for (int i = 0; i < m_vertexCount; i++) {
+		fin >> m_model[i].x >> m_model[i].y >> m_model[i].z;
+		fin >> m_model[i].tu >> m_model[i].tv;
+		fin >> m_model[i].nx >> m_model[i].ny >> m_model[i].nz;
+	}
+
+	// Close model data file
+	fin.close();
+
+	return true;
+
+
+}
+
+void ModelClass::ReleaseModel()
+{
+	if (m_model) {
+		delete[] m_model;
+		m_model = 0;
+	}
 }
 
 void ModelClass::Rotate(float rotate)

@@ -12,12 +12,18 @@ private:
 		XMFLOAT3 normal;
 	};
 
+	struct ModelType {
+		float x, y, z;
+		float tu, tv;
+		float nx, ny, nz;
+	};
+
 public:
 	ModelClass();
 	ModelClass(const ModelClass&);
 	~ModelClass();
 
-	bool Initialize(ID3D11Device*, WCHAR*);
+	bool Initialize(ID3D11Device*, char*, WCHAR*);
 	void Shutdown();
 	void Render(ID3D11DeviceContext*);
 
@@ -32,6 +38,9 @@ private:
 	bool LoadTexture(ID3D11Device*, WCHAR*);
 	void ReleaseTexture();
 
+	bool LoadModel(char*);
+	void ReleaseModel();
+
 	void Rotate(float rotate);
 
 private:
@@ -41,4 +50,5 @@ private:
 	int m_indexCount = 0;
 
 	TextureClass* m_Texture = nullptr;
+	ModelType* m_model = nullptr;
 };

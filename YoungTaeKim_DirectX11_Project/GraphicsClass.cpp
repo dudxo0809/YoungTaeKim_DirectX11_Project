@@ -57,8 +57,10 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// m_Model 객체 초기화
-	WCHAR filepath[] = L"../YoungTaeKim_DirectX11_Project/data/seafloor.dds";
-	if (!m_Model->Initialize(m_Direct3D->GetDevice(), filepath))
+
+	WCHAR textureFilepath[] = L"../YoungTaeKim_DirectX11_Project/data/seafloor.dds";
+	char modelFilepath[] = "../YoungTaeKim_DirectX11_Project/data/cube.txt";
+	if (!m_Model->Initialize(m_Direct3D->GetDevice(), modelFilepath, textureFilepath))
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
@@ -140,11 +142,11 @@ void GraphicsClass::Rotate(const unsigned int key)
 	switch (key) {
 		case VK_LEFT:
 		{
-			rotation -= 0.01f;
+			rotation -= 0.03f;
 			break;
 		}
 		case VK_RIGHT: {
-			rotation += 0.01f;
+			rotation += 0.03f;
 			break;
 		}
 	}
@@ -170,6 +172,7 @@ bool GraphicsClass::Render(float rotation)
 
 	// 삼각형이 회전 할 수 있도록 회전 값으로 월드 행렬을 회전합니다.
 	worldMatrix = XMMatrixRotationY(rotation);
+	//worldMatrix = XMMatrixTranspose()
 
 	// 모델 버텍스와 인덱스 버퍼를 그래픽 파이프 라인에 배치하여 드로잉을 준비합니다.
 	m_Model->Render(m_Direct3D->GetDeviceContext());
