@@ -31,7 +31,7 @@ public:
 	void Rotate(const unsigned int key);
 
 private:
-	bool Render(float rotation);
+	bool Render(float, float);
 
 private:
 	D3DClass* m_Direct3D = nullptr;
@@ -40,5 +40,6 @@ private:
 	LightClass* m_Light = nullptr;
 	LightShaderClass* m_LightShader = nullptr;
 
-	float rotation;
+	float rotationY;
+	float rotationX;
 };

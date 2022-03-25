@@ -9,7 +9,8 @@
 
 GraphicsClass::GraphicsClass()
 {
-	rotation = 0.0f;
+	rotationY = 0.0f;
+	rotationX = 0.0f;
 }
 
 
@@ -129,7 +130,7 @@ bool GraphicsClass::Frame()
 {
 
 	// 그래픽 랜더링 처리
-	return Render(rotation);
+	return Render(rotationY, rotationX);
 }
 
 void GraphicsClass::MoveCamera(unsigned int key)
@@ -142,11 +143,19 @@ void GraphicsClass::Rotate(const unsigned int key)
 	switch (key) {
 		case VK_LEFT:
 		{
-			rotation -= 0.03f;
+			rotationY -= 0.03f;
 			break;
 		}
 		case VK_RIGHT: {
-			rotation += 0.03f;
+			rotationY += 0.03f;
+			break;
+		}
+		case VK_UP: {
+			rotationX -= 0.03f;
+			break;
+		}
+		case VK_DOWN: {
+			rotationX += 0.03f;
 			break;
 		}
 	}
@@ -155,7 +164,7 @@ void GraphicsClass::Rotate(const unsigned int key)
 };
 
 
-bool GraphicsClass::Render(float rotation)
+bool GraphicsClass::Render(float rotationY, float rotationX)
 {
 
 	// 씬을 그리기 위해 버퍼를 지웁니다
@@ -171,8 +180,9 @@ bool GraphicsClass::Render(float rotation)
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 
 	// 삼각형이 회전 할 수 있도록 회전 값으로 월드 행렬을 회전합니다.
-	worldMatrix = XMMatrixRotationY(rotation);
-	//worldMatrix = XMMatrixTranspose()
+	worldMatrix = XMMatrixRotationY(rotationY);
+	//worldMatrix = XMMatrixRotationX(rotationX);
+	
 
 	// 모델 버텍스와 인덱스 버퍼를 그래픽 파이프 라인에 배치하여 드로잉을 준비합니다.
 	m_Model->Render(m_Direct3D->GetDeviceContext());
