@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "LightShaderClass.h"
 
 
@@ -19,7 +19,7 @@ LightShaderClass::~LightShaderClass()
 
 bool LightShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
 {
-	// Á¤Á¡ ¹× ÇÈ¼¿ ½¦ÀÌ´õ¸¦ ÃÊ±âÈ­ÇÕ´Ï´Ù.
+	// ì •ì  ë° í”½ì…€ ì‰ì´ë”ë¥¼ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
 	WCHAR ps[] = L"../YoungTaeKim_DirectX11_Project/light.ps";
 	WCHAR vs[] = L"../YoungTaeKim_DirectX11_Project/light.vs";
 
@@ -29,21 +29,23 @@ bool LightShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
 
 void LightShaderClass::Shutdown()
 {
-	// ¹öÅØ½º ¹× ÇÈ¼¿ ½¦ÀÌ´õ¿Í °ü·ÃµÈ °´Ã¼¸¦ Á¾·áÇÕ´Ï´Ù.
+	// ë²„í…ìŠ¤ ë° í”½ì…€ ì‰ì´ë”ì™€ ê´€ë ¨ëœ ê°ì²´ë¥¼ ì¢…ë£Œí•©ë‹ˆë‹¤.
 	ShutdownShader();
 }
 
 
 bool LightShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
-	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor)
+	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection, XMFLOAT4 ambientColor,
+	XMFLOAT4 diffuseColor, XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, float specularPower)
 {
-	// ·»´õ¸µ¿¡ »ç¿ëÇÒ ¼ÎÀÌ´õ ¸Å°³ º¯¼ö¸¦ ¼³Á¤ÇÕ´Ï´Ù.
-	if (!SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, lightDirection, ambientColor, diffuseColor))
+	// ë Œë”ë§ì— ì‚¬ìš©í•  ì…°ì´ë” ë§¤ê°œ ë³€ìˆ˜ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
+	if (!SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, lightDirection, ambientColor, diffuseColor,
+		cameraPosition, specularColor, specularPower))
 	{
 		return false;
 	}
 
-	// ¼³Á¤µÈ ¹öÆÛ¸¦ ¼ÎÀÌ´õ·Î ·»´õ¸µÇÑ´Ù.
+	// ì„¤ì •ëœ ë²„í¼ë¥¼ ì…°ì´ë”ë¡œ ë Œë”ë§í•œë‹¤.
 	RenderShader(deviceContext, indexCount);
 
 	return true;
@@ -55,17 +57,17 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
 	HRESULT result;
 	ID3D10Blob* errorMessage = nullptr;
 
-	// ¹öÅØ½º ½¦ÀÌ´õ ÄÚµå¸¦ ÄÄÆÄÀÏÇÑ´Ù.
+	// ë²„í…ìŠ¤ ì‰ì´ë” ì½”ë“œë¥¼ ì»´íŒŒì¼í•œë‹¤.
 	ID3D10Blob* vertexShaderBuffer = nullptr;
-	result = D3DCompileFromFile(vsFilename, NULL, NULL, "LightVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0,	&vertexShaderBuffer, &errorMessage);
+	result = D3DCompileFromFile(vsFilename, NULL, NULL, "LightVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage);
 	if (FAILED(result))
 	{
-		// ¼ÎÀÌ´õ ÄÄÆÄÀÏ ½ÇÆĞ½Ã ¿À·ù¸Ş½ÃÁö¸¦ Ãâ·ÂÇÕ´Ï´Ù.
+		// ì…°ì´ë” ì»´íŒŒì¼ ì‹¤íŒ¨ì‹œ ì˜¤ë¥˜ë©”ì‹œì§€ë¥¼ ì¶œë ¥í•©ë‹ˆë‹¤.
 		if (errorMessage)
 		{
 			OutputShaderErrorMessage(errorMessage, hwnd, vsFilename);
 		}
-		// ÄÄÆÄÀÏ ¿À·ù°¡ ¾Æ´Ï¶ó¸é ¼ÎÀÌ´õ ÆÄÀÏÀ» Ã£À» ¼ö ¾ø´Â °æ¿ìÀÔ´Ï´Ù.
+		// ì»´íŒŒì¼ ì˜¤ë¥˜ê°€ ì•„ë‹ˆë¼ë©´ ì…°ì´ë” íŒŒì¼ì„ ì°¾ì„ ìˆ˜ ì—†ëŠ” ê²½ìš°ì…ë‹ˆë‹¤.
 		else
 		{
 			MessageBox(hwnd, vsFilename, L"Missing Shader File", MB_OK);
@@ -74,17 +76,17 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
 		return false;
 	}
 
-	// ÇÈ¼¿ ½¦ÀÌ´õ ÄÚµå¸¦ ÄÄÆÄÀÏÇÑ´Ù.
+	// í”½ì…€ ì‰ì´ë” ì½”ë“œë¥¼ ì»´íŒŒì¼í•œë‹¤.
 	ID3D10Blob* pixelShaderBuffer = nullptr;
 	result = D3DCompileFromFile(psFilename, NULL, NULL, "LightPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
 	if (FAILED(result))
 	{
-		// ¼ÎÀÌ´õ ÄÄÆÄÀÏ ½ÇÆĞ½Ã ¿À·ù¸Ş½ÃÁö¸¦ Ãâ·ÂÇÕ´Ï´Ù.
+		// ì…°ì´ë” ì»´íŒŒì¼ ì‹¤íŒ¨ì‹œ ì˜¤ë¥˜ë©”ì‹œì§€ë¥¼ ì¶œë ¥í•©ë‹ˆë‹¤.
 		if (errorMessage)
 		{
 			OutputShaderErrorMessage(errorMessage, hwnd, psFilename);
 		}
-		// ÄÄÆÄÀÏ ¿À·ù°¡ ¾Æ´Ï¶ó¸é ¼ÎÀÌ´õ ÆÄÀÏÀ» Ã£À» ¼ö ¾ø´Â °æ¿ìÀÔ´Ï´Ù.
+		// ì»´íŒŒì¼ ì˜¤ë¥˜ê°€ ì•„ë‹ˆë¼ë©´ ì…°ì´ë” íŒŒì¼ì„ ì°¾ì„ ìˆ˜ ì—†ëŠ” ê²½ìš°ì…ë‹ˆë‹¤.
 		else
 		{
 			MessageBox(hwnd, psFilename, L"Missing Shader File", MB_OK);
@@ -93,22 +95,22 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
 		return false;
 	}
 
-	// ¹öÆÛ·ÎºÎÅÍ Á¤Á¡ ¼ÎÀÌ´õ¸¦ »ı¼ºÇÑ´Ù.
+	// ë²„í¼ë¡œë¶€í„° ì •ì  ì…°ì´ë”ë¥¼ ìƒì„±í•œë‹¤.
 	result = device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_vertexShader);
 	if (FAILED(result))
 	{
 		return false;
 	}
 
-	// ¹öÆÛ¿¡¼­ ÇÈ¼¿ ½¦ÀÌ´õ¸¦ »ı¼ºÇÕ´Ï´Ù.
+	// ë²„í¼ì—ì„œ í”½ì…€ ì‰ì´ë”ë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
 	result = device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_pixelShader);
 	if (FAILED(result))
 	{
 		return false;
 	}
 
-	// Á¤Á¡ ÀÔ·Â ·¹ÀÌ¾Æ¿ô ±¸Á¶Ã¼¸¦ ¼³Á¤ÇÕ´Ï´Ù.
-	// ÀÌ ¼³Á¤Àº ModelClass¿Í ¼ÎÀÌ´õÀÇ VertexType ±¸Á¶¿Í ÀÏÄ¡ÇØ¾ßÇÕ´Ï´Ù.
+	// ì •ì  ì…ë ¥ ë ˆì´ì•„ì›ƒ êµ¬ì¡°ì²´ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
+	// ì´ ì„¤ì •ì€ ModelClassì™€ ì…°ì´ë”ì˜ VertexType êµ¬ì¡°ì™€ ì¼ì¹˜í•´ì•¼í•©ë‹ˆë‹¤.
 	D3D11_INPUT_ELEMENT_DESC polygonLayout[3];
 	polygonLayout[0].SemanticName = "POSITION";
 	polygonLayout[0].SemanticIndex = 0;
@@ -134,10 +136,10 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
 	polygonLayout[2].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 	polygonLayout[2].InstanceDataStepRate = 0;
 
-	// ·¹ÀÌ¾Æ¿ôÀÇ ¿ä¼Ò ¼ö¸¦ °¡Á®¿É´Ï´Ù.
+	// ë ˆì´ì•„ì›ƒì˜ ìš”ì†Œ ìˆ˜ë¥¼ ê°€ì ¸ì˜µë‹ˆë‹¤.
 	UINT numElements = sizeof(polygonLayout) / sizeof(polygonLayout[0]);
 
-	// Á¤Á¡ ÀÔ·Â ·¹ÀÌ¾Æ¿ôÀ» ¸¸µì´Ï´Ù.
+	// ì •ì  ì…ë ¥ ë ˆì´ì•„ì›ƒì„ ë§Œë“­ë‹ˆë‹¤.
 	result = device->CreateInputLayout(polygonLayout, numElements, vertexShaderBuffer->GetBufferPointer(),
 		vertexShaderBuffer->GetBufferSize(), &m_layout);
 	if (FAILED(result))
@@ -145,14 +147,14 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
 		return false;
 	}
 
-	// ´õ ÀÌ»ó »ç¿ëµÇÁö ¾Ê´Â Á¤Á¡ ¼ÎÀÌ´õ ÆÛ¹ö¿Í ÇÈ¼¿ ¼ÎÀÌ´õ ¹öÆÛ¸¦ ÇØÁ¦ÇÕ´Ï´Ù.
+	// ë” ì´ìƒ ì‚¬ìš©ë˜ì§€ ì•ŠëŠ” ì •ì  ì…°ì´ë” í¼ë²„ì™€ í”½ì…€ ì…°ì´ë” ë²„í¼ë¥¼ í•´ì œí•©ë‹ˆë‹¤.
 	vertexShaderBuffer->Release();
 	vertexShaderBuffer = 0;
 
 	pixelShaderBuffer->Release();
 	pixelShaderBuffer = 0;
 
-	// ÅØ½ºÃ³ »ùÇÃ·¯ »óÅÂ ±¸Á¶Ã¼¸¦ »ı¼º ¹× ¼³Á¤ÇÕ´Ï´Ù.
+	// í…ìŠ¤ì²˜ ìƒ˜í”ŒëŸ¬ ìƒíƒœ êµ¬ì¡°ì²´ë¥¼ ìƒì„± ë° ì„¤ì •í•©ë‹ˆë‹¤.
 	D3D11_SAMPLER_DESC samplerDesc;
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -168,14 +170,14 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
 	samplerDesc.MinLOD = 0;
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
-	// ÅØ½ºÃ³ »ùÇÃ·¯ »óÅÂ¸¦ ¸¸µì´Ï´Ù.
+	// í…ìŠ¤ì²˜ ìƒ˜í”ŒëŸ¬ ìƒíƒœë¥¼ ë§Œë“­ë‹ˆë‹¤.
 	result = device->CreateSamplerState(&samplerDesc, &m_sampleState);
 	if (FAILED(result))
 	{
 		return false;
 	}
 
-	// Á¤Á¡ ¼ÎÀÌ´õ¿¡ ÀÖ´Â Çà·Ä »ó¼ö ¹öÆÛÀÇ ±¸Á¶Ã¼¸¦ ÀÛ¼ºÇÕ´Ï´Ù.
+	// ì •ì  ì…°ì´ë”ì— ìˆëŠ” í–‰ë ¬ ìƒìˆ˜ ë²„í¼ì˜ êµ¬ì¡°ì²´ë¥¼ ì‘ì„±í•©ë‹ˆë‹¤.
 	D3D11_BUFFER_DESC matrixBufferDesc;
 	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	matrixBufferDesc.ByteWidth = sizeof(MatrixBufferType);
@@ -184,15 +186,31 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
 	matrixBufferDesc.MiscFlags = 0;
 	matrixBufferDesc.StructureByteStride = 0;
 
-	// »ó¼ö ¹öÆÛ Æ÷ÀÎÅÍ¸¦ ¸¸µé¾î ÀÌ Å¬·¡½º¿¡¼­ Á¤Á¡ ¼ÎÀÌ´õ »ó¼ö ¹öÆÛ¿¡ Á¢±ÙÇÒ ¼ö ÀÖ°Ô ÇÕ´Ï´Ù.
+	// ìƒìˆ˜ ë²„í¼ í¬ì¸í„°ë¥¼ ë§Œë“¤ì–´ ì´ í´ë˜ìŠ¤ì—ì„œ ì •ì  ì…°ì´ë” ìƒìˆ˜ ë²„í¼ì— ì ‘ê·¼í•  ìˆ˜ ìˆê²Œ í•©ë‹ˆë‹¤.
 	result = device->CreateBuffer(&matrixBufferDesc, NULL, &m_matrixBuffer);
 	if (FAILED(result))
 	{
 		return false;
 	}
 
-	// ÇÈ¼¿ ½¦ÀÌ´õ¿¡ÀÖ´Â ±¤¿ø µ¿Àû »ó¼ö ¹öÆÛÀÇ ¼³¸íÀ» ¼³Á¤ÇÕ´Ï´Ù.
-	// D3D11_BIND_CONSTANT_BUFFER¸¦ »ç¿ëÇÏ¸é ByteWidth°¡ Ç×»ó 16ÀÇ ¹è¼ö ¿©¾ßÇÏ¸ç ±×·¸Áö ¾ÊÀ¸¸é CreateBuffer°¡ ½ÇÆĞÇÕ´Ï´Ù.
+	// ë²„í…ìŠ¤ ì‰ì´ë”ì—ìˆëŠ” ì¹´ë©”ë¼ ë™ì  ìƒìˆ˜ ë²„í¼ì˜ ì„¤ëª…ì„ ì„¤ì •í•©ë‹ˆë‹¤.
+	D3D11_BUFFER_DESC cameraBufferDesc;
+	cameraBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	cameraBufferDesc.ByteWidth = sizeof(CameraBufferType);
+	cameraBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cameraBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	cameraBufferDesc.MiscFlags = 0;
+	cameraBufferDesc.StructureByteStride = 0;
+
+	// ì´ í´ë˜ìŠ¤ ë‚´ì—ì„œ ì •ì  ì…°ì´ë” ìƒìˆ˜ ë²„í¼ì— ì•¡ì„¸ìŠ¤ í•  ìˆ˜ ìˆë„ë¡ ì¹´ë©”ë¼ ìƒìˆ˜ ë²„í¼ í¬ì¸í„°ë¥¼ ë§Œë“­ë‹ˆë‹¤.
+	result = device->CreateBuffer(&cameraBufferDesc, NULL, &m_cameraBuffer);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	// í”½ì…€ ì‰ì´ë”ì—ìˆëŠ” ê´‘ì› ë™ì  ìƒìˆ˜ ë²„í¼ì˜ ì„¤ëª…ì„ ì„¤ì •í•©ë‹ˆë‹¤.
+	// D3D11_BIND_CONSTANT_BUFFERë¥¼ ì‚¬ìš©í•˜ë©´ ByteWidthê°€ í•­ìƒ 16ì˜ ë°°ìˆ˜ ì—¬ì•¼í•˜ë©° ê·¸ë ‡ì§€ ì•Šìœ¼ë©´ CreateBufferê°€ ì‹¤íŒ¨í•©ë‹ˆë‹¤.
 	D3D11_BUFFER_DESC lightBufferDesc;
 	lightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	lightBufferDesc.ByteWidth = sizeof(LightBufferType);
@@ -201,12 +219,12 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
 	lightBufferDesc.MiscFlags = 0;
 	lightBufferDesc.StructureByteStride = 0;
 
-	// ÀÌ Å¬·¡½º ³»¿¡¼­ Á¤Á¡ ¼ÎÀÌ´õ »ó¼ö ¹öÆÛ¿¡ ¾×¼¼½º ÇÒ ¼ö ÀÖµµ·Ï »ó¼ö ¹öÆÛ Æ÷ÀÎÅÍ¸¦ ¸¸µì´Ï´Ù.
+	// ì´ í´ë˜ìŠ¤ ë‚´ì—ì„œ ì •ì  ì…°ì´ë” ìƒìˆ˜ ë²„í¼ì— ì•¡ì„¸ìŠ¤ í•  ìˆ˜ ìˆë„ë¡ ìƒìˆ˜ ë²„í¼ í¬ì¸í„°ë¥¼ ë§Œë“­ë‹ˆë‹¤.
 	result = device->CreateBuffer(&lightBufferDesc, NULL, &m_lightBuffer);
-	if(FAILED(result))
+	if (FAILED(result))
 	{
 		return false;
-	}	
+	}
 
 	return true;
 }
@@ -214,42 +232,49 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
 
 void LightShaderClass::ShutdownShader()
 {
-	// ±¤¿ø »ó¼ö ¹öÆÛ¸¦ ÇØÁ¦ÇÕ´Ï´Ù.
-	if(m_lightBuffer)
+	// ê´‘ì› ìƒìˆ˜ ë²„í¼ë¥¼ í•´ì œí•©ë‹ˆë‹¤.
+	if (m_lightBuffer)
 	{
 		m_lightBuffer->Release();
 		m_lightBuffer = 0;
 	}
 
-	// Çà·Ä »ó¼ö ¹öÆÛ¸¦ ÇØÁ¦ÇÕ´Ï´Ù.
+	// ì¹´ë©”ë¼ ìƒìˆ˜ ë²„í¼ë¥¼ í•´ì œí•©ë‹ˆë‹¤.
+	if (m_cameraBuffer)
+	{
+		m_cameraBuffer->Release();
+		m_cameraBuffer = 0;
+	}
+
+	// í–‰ë ¬ ìƒìˆ˜ ë²„í¼ë¥¼ í•´ì œí•©ë‹ˆë‹¤.
 	if (m_matrixBuffer)
 	{
 		m_matrixBuffer->Release();
 		m_matrixBuffer = 0;
 	}
 
-	// »ùÇÃ·¯ »óÅÂ¸¦ ÇØÁ¦ÇÑ´Ù.
+	// ìƒ˜í”ŒëŸ¬ ìƒíƒœë¥¼ í•´ì œí•œë‹¤.
 	if (m_sampleState)
 	{
 		m_sampleState->Release();
 		m_sampleState = 0;
 	}
 
-	// ·¹ÀÌ¾Æ¿ôÀ» ÇØÁ¦ÇÕ´Ï´Ù.
+	// ë ˆì´ì•„ì›ƒì„ í•´ì œí•©ë‹ˆë‹¤.
 	if (m_layout)
 	{
 		m_layout->Release();
 		m_layout = 0;
 	}
 
-	// ÇÈ¼¿ ½¦ÀÌ´õ¸¦ ÇØÁ¦ÇÕ´Ï´Ù.
+	// í”½ì…€ ì‰ì´ë”ë¥¼ í•´ì œí•©ë‹ˆë‹¤.
 	if (m_pixelShader)
 	{
 		m_pixelShader->Release();
 		m_pixelShader = 0;
 	}
 
-	// ¹öÅØ½º ½¦ÀÌ´õ¸¦ ÇØÁ¦ÇÕ´Ï´Ù.
+	// ë²„í…ìŠ¤ ì‰ì´ë”ë¥¼ í•´ì œí•©ë‹ˆë‹¤.
 	if (m_vertexShader)
 	{
 		m_vertexShader->Release();
@@ -260,75 +285,99 @@ void LightShaderClass::ShutdownShader()
 
 void LightShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
 {
-	// ¿¡·¯ ¸Ş½ÃÁö¸¦ Ãâ·ÂÃ¢¿¡ Ç¥½ÃÇÕ´Ï´Ù.
+	// ì—ëŸ¬ ë©”ì‹œì§€ë¥¼ ì¶œë ¥ì°½ì— í‘œì‹œí•©ë‹ˆë‹¤.
 	OutputDebugStringA(reinterpret_cast<const char*>(errorMessage->GetBufferPointer()));
 
-	// ¿¡·¯ ¸Ş¼¼Áö¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+	// ì—ëŸ¬ ë©”ì„¸ì§€ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
 	errorMessage->Release();
 	errorMessage = 0;
 
-	// ÄÄÆÄÀÏ ¿¡·¯°¡ ÀÖÀ½À» ÆË¾÷ ¸Ş¼¼Áö·Î ¾Ë·ÁÁİ´Ï´Ù.
+	// ì»´íŒŒì¼ ì—ëŸ¬ê°€ ìˆìŒì„ íŒì—… ë©”ì„¸ì§€ë¡œ ì•Œë ¤ì¤ë‹ˆë‹¤.
 	MessageBox(hwnd, L"Error compiling shader.", shaderFilename, MB_OK);
 }
 
 
 bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
-	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor)
+	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection, XMFLOAT4 ambientColor,
+	XMFLOAT4 diffuseColor, XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, float specularPower)
 {
-	// Çà·ÄÀ» transposeÇÏ¿© ¼ÎÀÌ´õ¿¡¼­ »ç¿ëÇÒ ¼ö ÀÖ°Ô ÇÕ´Ï´Ù
+	// í–‰ë ¬ì„ transposeí•˜ì—¬ ì…°ì´ë”ì—ì„œ ì‚¬ìš©í•  ìˆ˜ ìˆê²Œ í•©ë‹ˆë‹¤
 	worldMatrix = XMMatrixTranspose(worldMatrix);
 	viewMatrix = XMMatrixTranspose(viewMatrix);
 	projectionMatrix = XMMatrixTranspose(projectionMatrix);
 
-	// »ó¼ö ¹öÆÛÀÇ ³»¿ëÀ» ¾µ ¼ö ÀÖµµ·Ï Àá±Ş´Ï´Ù.
+	// ìƒìˆ˜ ë²„í¼ì˜ ë‚´ìš©ì„ ì“¸ ìˆ˜ ìˆë„ë¡ ì ê¸‰ë‹ˆë‹¤.
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	if (FAILED(deviceContext->Map(m_matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
 	{
 		return false;
 	}
 
-	// »ó¼ö ¹öÆÛÀÇ µ¥ÀÌÅÍ¿¡ ´ëÇÑ Æ÷ÀÎÅÍ¸¦ °¡Á®¿É´Ï´Ù.
+	// ìƒìˆ˜ ë²„í¼ì˜ ë°ì´í„°ì— ëŒ€í•œ í¬ì¸í„°ë¥¼ ê°€ì ¸ì˜µë‹ˆë‹¤.
 	MatrixBufferType* dataPtr = (MatrixBufferType*)mappedResource.pData;
 
-	// »ó¼ö ¹öÆÛ¿¡ Çà·ÄÀ» º¹»çÇÕ´Ï´Ù.
+	// ìƒìˆ˜ ë²„í¼ì— í–‰ë ¬ì„ ë³µì‚¬í•©ë‹ˆë‹¤.
 	dataPtr->world = worldMatrix;
 	dataPtr->view = viewMatrix;
 	dataPtr->projection = projectionMatrix;
 
-	// »ó¼ö ¹öÆÛÀÇ Àá±İÀ» Ç±´Ï´Ù.
+	// ìƒìˆ˜ ë²„í¼ì˜ ì ê¸ˆì„ í’‰ë‹ˆë‹¤.
 	deviceContext->Unmap(m_matrixBuffer, 0);
 
-	// Á¤Á¡ ¼ÎÀÌ´õ¿¡¼­ÀÇ »ó¼ö ¹öÆÛÀÇ À§Ä¡¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+	// ì •ì  ì…°ì´ë”ì—ì„œì˜ ìƒìˆ˜ ë²„í¼ì˜ ìœ„ì¹˜ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
 	unsigned int bufferNumber = 0;
 
-	// ¸¶Áö¸·À¸·Î Á¤Á¡ ¼ÎÀÌ´õÀÇ »ó¼ö ¹öÆÛ¸¦ ¹Ù²ï °ªÀ¸·Î ¹Ù²ß´Ï´Ù.
+	// ë§ˆì§€ë§‰ìœ¼ë¡œ ì •ì  ì…°ì´ë”ì˜ ìƒìˆ˜ ë²„í¼ë¥¼ ë°”ë€ ê°’ìœ¼ë¡œ ë°”ê¿‰ë‹ˆë‹¤.
 	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_matrixBuffer);
 
-	// ÇÈ¼¿ ¼ÎÀÌ´õ¿¡¼­ ¼ÎÀÌ´õ ÅØ½ºÃ³ ¸®¼Ò½º¸¦ ¼³Á¤ÇÕ´Ï´Ù.
-	deviceContext->PSSetShaderResources(0, 1, &texture);
-
-	// light constant buffer¸¦ Àá±Û ¼ö ÀÖµµ·Ï ±â·ÏÇÑ´Ù.
-	if(FAILED(deviceContext->Map(m_lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
+	// ì“¸ ìˆ˜ ìˆë„ë¡ ì¹´ë©”ë¼ ìƒìˆ˜ ë²„í¼ë¥¼ ì ê¸‰ë‹ˆë‹¤.
+	if (FAILED(deviceContext->Map(m_cameraBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
 	{
 		return false;
 	}
 
-	// »ó¼ö ¹öÆÛÀÇ µ¥ÀÌÅÍ¿¡ ´ëÇÑ Æ÷ÀÎÅÍ¸¦ °¡Á®¿É´Ï´Ù.
+	// ìƒìˆ˜ ë²„í¼ì˜ ë°ì´í„°ì— ëŒ€í•œ í¬ì¸í„°ë¥¼ ê°€ì ¸ì˜µë‹ˆë‹¤.
+	CameraBufferType* dataPtr3 = (CameraBufferType*)mappedResource.pData;
+
+	// ì¹´ë©”ë¼ ìœ„ì¹˜ë¥¼ ìƒìˆ˜ ë²„í¼ì— ë³µì‚¬í•©ë‹ˆë‹¤.
+	dataPtr3->cameraPosition = cameraPosition;
+	dataPtr3->padding = 0.0f;
+
+	// ì¹´ë©”ë¼ ìƒìˆ˜ ë²„í¼ë¥¼ ì ê¸ˆ í•´ì œí•©ë‹ˆë‹¤.
+	deviceContext->Unmap(m_cameraBuffer, 0);
+
+	// ë²„í…ìŠ¤ ì‰ì´ë”ì—ì„œ ì¹´ë©”ë¼ ìƒìˆ˜ ë²„í¼ì˜ ìœ„ì¹˜ë¥¼ â€‹â€‹ì„¤ì •í•©ë‹ˆë‹¤.
+	bufferNumber = 1;
+
+	// ì´ì œ ì—…ë°ì´íŠ¸ ëœ ê°’ìœ¼ë¡œ ë²„í…ìŠ¤ ì‰ì´ë”ì—ì„œ ì¹´ë©”ë¼ ìƒìˆ˜ ë²„í¼ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
+	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_cameraBuffer);
+
+	// í”½ì…€ ì…°ì´ë”ì—ì„œ ì…°ì´ë” í…ìŠ¤ì²˜ ë¦¬ì†ŒìŠ¤ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
+	deviceContext->PSSetShaderResources(0, 1, &texture);
+
+	// light constant bufferë¥¼ ì ê¸€ ìˆ˜ ìˆë„ë¡ ê¸°ë¡í•œë‹¤.
+	if (FAILED(deviceContext->Map(m_lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
+	{
+		return false;
+	}
+
+	// ìƒìˆ˜ ë²„í¼ì˜ ë°ì´í„°ì— ëŒ€í•œ í¬ì¸í„°ë¥¼ ê°€ì ¸ì˜µë‹ˆë‹¤.
 	LightBufferType* dataPtr2 = (LightBufferType*)mappedResource.pData;
 
-	// Á¶¸í º¯¼ö¸¦ »ó¼ö ¹öÆÛ¿¡ º¹»çÇÕ´Ï´Ù.
+	// ì¡°ëª… ë³€ìˆ˜ë¥¼ ìƒìˆ˜ ë²„í¼ì— ë³µì‚¬í•©ë‹ˆë‹¤.
 	dataPtr2->ambientColor = ambientColor;
 	dataPtr2->diffuseColor = diffuseColor;
 	dataPtr2->lightDirection = lightDirection;
-	dataPtr2->padding = 0.0f;
+	dataPtr2->specularColor = specularColor;
+	dataPtr2->specularPower = specularPower;
 
-	// »ó¼ö ¹öÆÛÀÇ Àá±İÀ» ÇØÁ¦ÇÕ´Ï´Ù.
+	// ìƒìˆ˜ ë²„í¼ì˜ ì ê¸ˆì„ í•´ì œí•©ë‹ˆë‹¤.
 	deviceContext->Unmap(m_lightBuffer, 0);
 
-	// ÇÈ¼¿ ½¦ÀÌ´õ¿¡¼­ ±¤¿ø »ó¼ö ¹öÆÛÀÇ À§Ä¡¸¦ ??¼³Á¤ÇÕ´Ï´Ù.
+	// í”½ì…€ ì‰ì´ë”ì—ì„œ ê´‘ì› ìƒìˆ˜ ë²„í¼ì˜ ìœ„ì¹˜ë¥¼ ??ì„¤ì •í•©ë‹ˆë‹¤.
 	bufferNumber = 0;
 
-	// ¸¶Áö¸·À¸·Î ¾÷µ¥ÀÌÆ® µÈ °ªÀ¸·Î ÇÈ¼¿ ½¦ÀÌ´õ¿¡¼­ ±¤¿ø »ó¼ö ¹öÆÛ¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+	// ë§ˆì§€ë§‰ìœ¼ë¡œ ì—…ë°ì´íŠ¸ ëœ ê°’ìœ¼ë¡œ í”½ì…€ ì‰ì´ë”ì—ì„œ ê´‘ì› ìƒìˆ˜ ë²„í¼ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
 	deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_lightBuffer);
 	return true;
 }
@@ -336,16 +385,16 @@ bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, X
 
 void LightShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
 {
-	// Á¤Á¡ ÀÔ·Â ·¹ÀÌ¾Æ¿ôÀ» ¼³Á¤ÇÕ´Ï´Ù.
+	// ì •ì  ì…ë ¥ ë ˆì´ì•„ì›ƒì„ ì„¤ì •í•©ë‹ˆë‹¤.
 	deviceContext->IASetInputLayout(m_layout);
 
-	// »ï°¢ÇüÀ» ±×¸± Á¤Á¡ ¼ÎÀÌ´õ¿Í ÇÈ¼¿ ¼ÎÀÌ´õ¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+	// ì‚¼ê°í˜•ì„ ê·¸ë¦´ ì •ì  ì…°ì´ë”ì™€ í”½ì…€ ì…°ì´ë”ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
 	deviceContext->VSSetShader(m_vertexShader, NULL, 0);
 	deviceContext->PSSetShader(m_pixelShader, NULL, 0);
 
-	// ÇÈ¼¿ ½¦ÀÌ´õ¿¡¼­ »ùÇÃ·¯ »óÅÂ¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+	// í”½ì…€ ì‰ì´ë”ì—ì„œ ìƒ˜í”ŒëŸ¬ ìƒíƒœë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
 	deviceContext->PSSetSamplers(0, 1, &m_sampleState);
 
-	// »ï°¢ÇüÀ» ±×¸³´Ï´Ù.
+	// ì‚¼ê°í˜•ì„ ê·¸ë¦½ë‹ˆë‹¤.
 	deviceContext->DrawIndexed(indexCount, 0, 0);
 }
